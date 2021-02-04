@@ -1,0 +1,9 @@
+Package: de.idefix2020.zoomtweak
+Name: zoomTweak
+Version: 0.0.1
+Architecture: iphoneos-arm
+Description: An awesome MobileSubstrate tweak!
+Maintainer: Idefix2020
+Author: Idefix2020
+Section: Tweaks
+Depends: mobilesubstrate (>= 0.9.5000)
