@@ -2,4 +2,5 @@
 #import <SpringBoard/SpringBoard.h>
 
 @interface ZMZoomViewController : UIViewController
++ (void)checkLandscapeOrientation;
 @end

@@ -24,7 +24,6 @@ UIView *thumbnailView = nil;
 %hook ZMZoomViewController
 
 - (void)handledragThumbnailViewGesture:(UIPanGestureRecognizer*)panGestureRecognizer { // arg is a UIPanGestureRecognizer
-	// ALERT(@"handledragThumbnailViewGesture:(id)%@",panGestureRecognizer);
 
 	if (thumbnailView == nil) {
 	    thumbnailView = panGestureRecognizer.view;
@@ -32,38 +31,15 @@ UIView *thumbnailView = nil;
 
 	CGPoint translatedPoint = [panGestureRecognizer translationInView:panGestureRecognizer.view.superview];
 
-    if (panGestureRecognizer.state == UIGestureRecognizerStateBegan) {
-        // CGFloat firstX = panGestureRecognizer.view.center.x;
-        // CGFloat firstY = panGestureRecognizer.view.center.y;
-    }
-
-    NSLog(@"[zoomTweak] state: %ld", panGestureRecognizer.state);
-
     if ((panGestureRecognizer.state == UIGestureRecognizerStateCancelled) || (panGestureRecognizer.state == UIGestureRecognizerStateFailed) || (panGestureRecognizer.state == UIGestureRecognizerStateEnded) || (panGestureRecognizer.state == UIGestureRecognizerStateRecognized)) {
-        CGPoint finalPosition = panGestureRecognizer.view.center;
 
-        NSLog(@"[zoomTweak] view: %@", panGestureRecognizer.view);        
-        NSLog(@"[zoomTweak] finalPosition: %@", NSStringFromCGPoint(finalPosition));
+	    [%c(ZMZoomViewController) checkLandscapeOrientation];
 
-        if (@available(iOS 13.0, *)) {
-        	UIWindow *firstWindow = [[[UIApplication sharedApplication] windows] firstObject];
-        	if (firstWindow == nil) { isLandscape = NO; }
-
-        	UIWindowScene *windowScene = firstWindow.windowScene;
-        	if (windowScene == nil){ isLandscape = NO; }
-
-        	isLandscape = UIInterfaceOrientationIsLandscape(windowScene.interfaceOrientation);
-        } else {
-        	isLandscape = (UIInterfaceOrientationIsLandscape(UIApplication.sharedApplication.statusBarOrientation));
-        }
-
-        NSLog(@"[zoomTweak] isLandscape:%@", isLandscape ? @"YES" : @"NO");
-
-        if (!isLandscape) {
-            savedPositionPortrait = finalPosition;
+        if (isLandscape) {
+            savedPositionLandscape = thumbnailView.center;
         }
         else {
-            savedPositionLandscape = finalPosition;
+            savedPositionPortrait = thumbnailView.center;
         }
 
     }
@@ -73,78 +49,61 @@ UIView *thumbnailView = nil;
     [panGestureRecognizer.view setCenter:translatedPoint];
     [panGestureRecognizer setTranslation:CGPointZero inView:panGestureRecognizer.view];
 
-	// %orig;
+	%orig;
 }
 
 - (void)adjustThumbnailPositionWithAnimate:(BOOL)arg {
 	NSLog(@"[zoomTweak] -(void)adjustThumbnailPositionWithAnimate:(BOOL)%@", arg ? @"YES" : @"NO");
 
-	if (counter < 10) {
+	[%c(ZMZoomViewController) checkLandscapeOrientation];
+
+	if (counter < 9) {
 	    counter++;
 	    %orig;
 	}
-	else {
-	    if (turnDisplay) {
-	        turnDisplay = NO;
+	else if (turnDisplay) {
+		turnDisplay = NO;
 
-	        %orig;
+		%orig;
 
-	        // Move thumbnailView to savedPosition
-	        if (@available(iOS 13.0, *)) {
-	        	UIWindow *firstWindow = [[[UIApplication sharedApplication] windows] firstObject];
-	        	if (firstWindow == nil) { isLandscape = NO; }
+	    // Move thumbnailView to savedPosition
 
-	        	UIWindowScene *windowScene = firstWindow.windowScene;
-	        	if (windowScene == nil){ isLandscape = NO; }
+		NSLog(@"[zoomTweak] isLandscape:%@", isLandscape ? @"YES" : @"NO");
 
-	        	isLandscape = UIInterfaceOrientationIsLandscape(windowScene.interfaceOrientation);
-	        } else {
-	        	isLandscape = (UIInterfaceOrientationIsLandscape(UIApplication.sharedApplication.statusBarOrientation));
-	        }
-
-	        NSLog(@"[zoomTweak] isLandscape:%@", isLandscape ? @"YES" : @"NO");
-
-	        if (!isLandscape && !CGPointEqualToPoint(savedPositionPortrait, {-1000.0,-1000.0})) {
-	        	[thumbnailView setCenter:savedPositionPortrait];
-	        	NSLog(@"[zoomTweak] savedPositionPortrait:%@", NSStringFromCGPoint(savedPositionPortrait));
-	        }
-	        else if (!CGPointEqualToPoint(savedPositionLandscape, {-1000.0,-1000.0})) {
-	        	[thumbnailView setCenter:savedPositionLandscape];
-	        	NSLog(@"[zoomTweak] savedPositionLandscape:%@", NSStringFromCGPoint(savedPositionLandscape));
-	        }
-	    }
+		if (isLandscape && !CGPointEqualToPoint(savedPositionLandscape, {-1000.0,-1000.0})) {
+			[thumbnailView setCenter:savedPositionLandscape];
+		}
+		else if (!CGPointEqualToPoint(savedPositionPortrait, {-1000.0,-1000.0})) {
+			[thumbnailView setCenter:savedPositionPortrait];
+		}
+	}
+	else if ((isLandscape && CGPointEqualToPoint(savedPositionLandscape, {-1000.0,-1000.0})) || (!isLandscape && CGPointEqualToPoint(savedPositionPortrait, {-1000.0,-1000.0}))) {
+	    %orig;
 	}
 
 }
 
 - (void)statusBarOrientationChangedNotification:(NSNotification *)notification {
-	NSLog(@"[zoomTweak] Notification: %@", notification);
+	NSLog(@"[zoomTweak] Orientation Changed");
 
 	turnDisplay = YES;
 
 	%orig;
 }
 
-%end
+%new
++ (void)checkLandscapeOrientation {
+	if (@available(iOS 13.0, *)) {
+		UIWindow *firstWindow = [[[UIApplication sharedApplication] windows] firstObject];
+		if (firstWindow == nil) { isLandscape = NO; }
 
-%hook ZMVideoViewController
+		UIWindowScene *windowScene = firstWindow.windowScene;
+		if (windowScene == nil){ isLandscape = NO; }
 
-- (void)viewDidLoad {
-	// thumbnailView = MSHookIvar<UIView *>(self, "thumbnailView");
-
-	// [thumbnailView setAutoresizingMask:UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin];
-
-	%orig;
-}
-
-%end
-
-%hook ZMShareViewController
-
-- (void)updateThumbnailViewFrame {
-	NSLog(@"[zoomTweak] -(void)updateThumbnailViewFrame");
-
-	%orig;
+		isLandscape = UIInterfaceOrientationIsLandscape(windowScene.interfaceOrientation);
+	} else {
+		isLandscape = (UIInterfaceOrientationIsLandscape(UIApplication.sharedApplication.statusBarOrientation));
+	}
 }
 
 %end
