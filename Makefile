@@ -12,6 +12,5 @@ TWEAK_NAME = zoomTweak
 
 zoomTweak_FILES = Tweak.xm
 zoomTweak_CFLAGS = -fobjc-arc -Wno-deprecated-declarations
-zoomTweak_FRAMEWORKS = UIKit,Framework
 
 include $(THEOS_MAKE_PATH)/tweak.mk
