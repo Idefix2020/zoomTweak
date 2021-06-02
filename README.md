@@ -1,5 +1,7 @@
 # Zoom Unlocked
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D24RBXR)
+
 **Unlock the Active Speaker Thumbnail in the Zoom App**
 
 https://repo.packix.com/package/com.idefix2020.zoomunlocked/
