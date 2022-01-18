@@ -49,11 +49,10 @@ UIView *thumbnailView = nil;
     [panGestureRecognizer.view setCenter:translatedPoint];
     [panGestureRecognizer setTranslation:CGPointZero inView:panGestureRecognizer.view];
 
-	%orig;
 }
 
-- (void)adjustThumbnailPositionWithAnimate:(BOOL)arg {
-	NSLog(@"[zoomTweak] -(void)adjustThumbnailPositionWithAnimate:(BOOL)%@", arg ? @"YES" : @"NO");
+- (void)adjustThumbnailPositionWithAnimate:(BOOL)arg ResumeVideoStream:(BOOL)arg2{
+	NSLog(@"[zoomTweak] -(void)adjustThumbnailPositionWithAnimate:(BOOL)%@ ResumeVideoStream:(BOOL)%@", arg ? @"YES" : @"NO", arg ? @"YES" : @"NO");
 
 	[%c(ZMZoomViewController) checkLandscapeOrientation];
 
